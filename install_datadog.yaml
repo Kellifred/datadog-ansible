@@ -1,0 +1,36 @@
+---
+- name: Install Datadog Agent on Amazon Linux AMI
+  hosts: 3.84.137.82
+  become: yes
+  vars:
+    datadog_api_key: 0d822755ec0d86a58c93ce277de2ae24
+  tasks:
+    - name: Add Datadog repository
+      yum_repository:
+        name: datadog
+        description: Datadog, Inc.
+        baseurl: https://yum.datadoghq.com/rpm/x86_64/
+        gpgcheck: 0
+        enabled: yes
+
+    - name: Install Datadog agent
+      yum:
+        name: datadog-agent
+        state: present
+
+    - name: Configure Datadog agent
+      copy:
+        src: /etc/datadog-agent/datadog.yaml.example
+        dest: /etc/datadog-agent/datadog.yaml
+
+    - name: Set Datadog API key
+      lineinfile:
+        path: /etc/datadog-agent/datadog.yaml
+        regexp: '^api_key:.*'
+        line: "api_key: {{ datadog_api_key }}"
+
+    - name: Enable and start Datadog agent service
+      service:
+        name: datadog-agent
+        enabled: yes
+        state: started
